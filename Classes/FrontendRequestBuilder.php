@@ -106,7 +106,10 @@ class FrontendRequestBuilder
     public function buildRequestForPage(UriInterface $uri, ?int $frontendUserId, $frontendUserGroups = []): ?ResponseInterface
     {
         $this->prepare();
-        $request = new ServerRequest($uri, 'GET');
+        $request = new ServerRequest($uri, 'GET', null, [], [
+            'HTTP_HOST' => $uri->getHost(),
+            'REQUEST_URI' => $uri->getPath()
+        ]);
 
         if (!empty($frontendUserGroups)) {
             $this->activateFrontendGroupAuthService($frontendUserGroups, $frontendUserId);
@@ -150,8 +153,13 @@ class FrontendRequestBuilder
     private function buildDispatcher()
     {
         $requestHandler = GeneralUtility::makeInstance(RequestHandler::class);
+        if ((new Typo3Version())->getMajorVersion() >= 10) {
+            $packageManagerOrContainer = GeneralUtility::getContainer();
+        } else {
+            $packageManagerOrContainer = GeneralUtility::makeInstance(PackageManager::class);
+        }
         $resolver = new MiddlewareStackResolver(
-            GeneralUtility::makeInstance(PackageManager::class),
+            $packageManagerOrContainer,
             GeneralUtility::makeInstance(DependencyOrderingService::class),
             GeneralUtility::makeInstance(CacheManager::class)->getCache('cache_core')
         );
