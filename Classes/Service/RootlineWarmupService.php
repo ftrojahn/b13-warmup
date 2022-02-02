@@ -48,7 +48,6 @@ class RootlineWarmupService
         if ($pageRecord['sys_language_uid']) {
             $context->setAspect('language', new LanguageAspect($pageRecord['sys_language_uid']));
         }
-        GeneralUtility::makeInstance(RootlineUtility::class, $pageRecord['uid'], '', $context);
-
+        GeneralUtility::makeInstance(RootlineUtility::class, $pageRecord['uid'], '', $context)->get();
     }
 }
