@@ -48,7 +48,7 @@ class RootPagesWarmupService
         // fetch all pages which are not deleted and in live workspace and not one of excluded types
         $excludeDocTypes = [
             3, // external link
-            4, // shortcut
+            // 4, // shortcut
             6, // be user section
             7, // mount point
             199, // menu separator
@@ -75,16 +75,26 @@ class RootPagesWarmupService
             if (in_array((int)$pageRecord['uid'], $this->excludePages, true)) {
                 continue;
             }
-            try {
-                $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId((int)$pageRecord['uid']);
-                $languageUid = (int)$pageRecord['sys_language_uid'];
+	        if ($pageRecord['doktype'] == 4 and $pageRecord['shortcut_mode'] == 0) {
+		        // doktype = 4 and is_siteroot and shortcut_mode = 0
+		        $statement2 = $queryBuilder->select('*')->from('pages')->where(
+			        $queryBuilder->expr()->eq('sys_language_uid', 0),
+			        $queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($pageRecord['shortcut'], \PDO::PARAM_INT))
+		        )->execute();
+				$myPageRecord = $statement2->fetch();
+	        } else {
+				$myPageRecord = $pageRecord;
+	        }
+	        try {
+                $site = GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId((int)$myPageRecord['uid']);
+                $languageUid = (int)$myPageRecord['sys_language_uid'];
                 $siteLanguage = $site->getLanguageById($languageUid);
-                $url = $site->getRouter()->generateUri($pageRecord, ['_language' => $siteLanguage]);
-                $this->executeRequestForPageRecord($url, $pageRecord);
+                $url = $site->getRouter()->generateUri($myPageRecord, ['_language' => $siteLanguage]);
+                $this->executeRequestForPageRecord($url, $myPageRecord);
                 $requestedPages++;
 
             } catch (SiteNotFoundException $e) {
-                $io->error('Rootline Cache for Page ID ' . $pageRecord['uid'] . ' could not be warmed up');
+                $io->error('Rootline Cache for Page ID ' . $myPageRecord['uid'] . ' could not be warmed up');
             }
         }
 
