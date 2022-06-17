@@ -13,6 +13,7 @@ namespace B13\Warmup\Command;
 use B13\Warmup\Service\PageWarmupService;
 use B13\Warmup\Service\RootlineV8Service;
 use B13\Warmup\Service\RootlineWarmupService;
+use B13\Warmup\Service\RootPagesWarmupService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,7 +37,7 @@ class WarmupCommand extends Command
             ->addArgument(
                 'type',
                 InputArgument::OPTIONAL,
-                'Choose between "rootline" and "pages", or "all"',
+                'Choose between "rootline", "rootpages" and "pages", or "all"',
                 'all'
             );
     }
@@ -72,6 +73,9 @@ class WarmupCommand extends Command
                     break;
                 case 'rootline':
                     yield 'rootline' => new RootlineWarmupService();
+                    break;
+                case 'rootpages':
+                    yield 'rootpages' => new RootPagesWarmupService();
                     break;
                 case 'pages':
                     yield 'pages' => new PageWarmupService();
